@@ -813,7 +813,7 @@ export default function BDOChequeFiller() {
                   </div>
 
                   {/* Pesos Field */}
-                  <div className="absolute" style={{ bottom: "-7mm", right: "30mm" }}>
+                  <div className="absolute" style={{ bottom: "-7mm", right: "26mm" }}>
                     <input
                       type="text"
                       value={formData.pesos}
