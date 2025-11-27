@@ -510,7 +510,60 @@ export default function BDOChequeFiller() {
     const value = e.target.value.replace(/\D/g, "").slice(0, 1)
     updateField(field, value)
     if (value && next?.current) {
-      next.current.focus()
+      // Use setTimeout to ensure the value is set before focusing
+      setTimeout(() => {
+        next.current?.focus()
+      }, 0)
+    }
+  }
+
+  const handleDateKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    field: keyof typeof formData,
+    next?: React.RefObject<HTMLInputElement | null>,
+  ) => {
+    // Handle Enter key - move to next field or blur if last field
+    if (e.key === "Enter") {
+      e.preventDefault()
+      if (next?.current) {
+        next.current.focus()
+      } else {
+        e.currentTarget.blur()
+      }
+      return
+    }
+
+    // Allow navigation keys
+    if (e.key === "Backspace" || e.key === "Delete" || e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "Tab") {
+      return
+    }
+
+    // If a digit is pressed and the field already has a value, move to next
+    if (/[0-9]/.test(e.key) && formData[field] && next?.current) {
+      e.preventDefault()
+      updateField(field, e.key)
+      setTimeout(() => {
+        next.current?.focus()
+      }, 0)
+    }
+  }
+
+  const handlePayeeEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault()
+      e.currentTarget.blur()
+    }
+  }
+
+  const handleAmountEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault()
+      const formatted = formatNumberOnBlur(formData.pesos)
+      updateField("pesos", formatted)
+      const sentence = numberToWordsSentence(formatted)
+      updateField("pesosSentece", sentence)
+      // Blur the input to show the formatted value
+      e.currentTarget.blur()
     }
   }
 
@@ -590,6 +643,7 @@ export default function BDOChequeFiller() {
                         inputMode="numeric"
                         maxLength={1}
                         onChange={(e) => handleDigit(e, "month1", refs.month2)}
+                        onKeyDown={(e) => handleDateKeyDown(e, "month1", refs.month2)}
                         className="w-9 h-10 text-center font-mono text-lg p-0"
                         placeholder="M"
                       />
@@ -599,6 +653,7 @@ export default function BDOChequeFiller() {
                         inputMode="numeric"
                         maxLength={1}
                         onChange={(e) => handleDigit(e, "month2", refs.day1)}
+                        onKeyDown={(e) => handleDateKeyDown(e, "month2", refs.day1)}
                         className="w-9 h-10 text-center font-mono text-lg p-0"
                         placeholder="M"
                       />
@@ -611,6 +666,7 @@ export default function BDOChequeFiller() {
                         inputMode="numeric"
                         maxLength={1}
                         onChange={(e) => handleDigit(e, "day1", refs.day2)}
+                        onKeyDown={(e) => handleDateKeyDown(e, "day1", refs.day2)}
                         className="w-9 h-10 text-center font-mono text-lg p-0"
                         placeholder="D"
                       />
@@ -620,6 +676,7 @@ export default function BDOChequeFiller() {
                         inputMode="numeric"
                         maxLength={1}
                         onChange={(e) => handleDigit(e, "day2", refs.year1)}
+                        onKeyDown={(e) => handleDateKeyDown(e, "day2", refs.year1)}
                         className="w-9 h-10 text-center font-mono text-lg p-0"
                         placeholder="D"
                       />
@@ -632,6 +689,7 @@ export default function BDOChequeFiller() {
                         inputMode="numeric"
                         maxLength={1}
                         onChange={(e) => handleDigit(e, "year1", refs.year2)}
+                        onKeyDown={(e) => handleDateKeyDown(e, "year1", refs.year2)}
                         className="w-9 h-10 text-center font-mono text-lg p-0"
                         placeholder="Y"
                       />
@@ -641,6 +699,7 @@ export default function BDOChequeFiller() {
                         inputMode="numeric"
                         maxLength={1}
                         onChange={(e) => handleDigit(e, "year2", refs.year3)}
+                        onKeyDown={(e) => handleDateKeyDown(e, "year2", refs.year3)}
                         className="w-9 h-10 text-center font-mono text-lg p-0"
                         placeholder="Y"
                       />
@@ -650,6 +709,7 @@ export default function BDOChequeFiller() {
                         inputMode="numeric"
                         maxLength={1}
                         onChange={(e) => handleDigit(e, "year3", refs.year4)}
+                        onKeyDown={(e) => handleDateKeyDown(e, "year3", refs.year4)}
                         className="w-9 h-10 text-center font-mono text-lg p-0"
                         placeholder="Y"
                       />
@@ -659,6 +719,7 @@ export default function BDOChequeFiller() {
                         inputMode="numeric"
                         maxLength={1}
                         onChange={(e) => handleDigit(e, "year4")}
+                        onKeyDown={(e) => handleDateKeyDown(e, "year4")}
                         className="w-9 h-10 text-center font-mono text-lg p-0"
                         placeholder="Y"
                       />
@@ -677,6 +738,7 @@ export default function BDOChequeFiller() {
                   <Input
                     value={formData.name}
                     onChange={(e) => updateField("name", e.target.value)}
+                    onKeyDown={handlePayeeEnter}
                     placeholder="Enter payee name"
                     className="h-10"
                   />
@@ -693,6 +755,7 @@ export default function BDOChequeFiller() {
                   <Input
                     value={formData.pesos}
                     onChange={(e) => updateField("pesos", e.target.value)}
+                    onKeyDown={handleAmountEnter}
                     onBlur={(e) => {
                       const formatted = formatNumberOnBlur(e.target.value)
                       updateField("pesos", formatted)
@@ -804,7 +867,7 @@ export default function BDOChequeFiller() {
                   <div className="absolute" style={{ bottom: "-7mm", left: "27mm" }}>
                     <input
                       type="text"
-                      value={formData.name}
+                      value={"***" +formData.name + "***"}
                       onChange={(e) => updateField("name", e.target.value)}
                       className="border-b border-gray-400 print:border-none text-left bg-transparent focus:outline-none focus:border-blue-500 focus:border-b-2 transition-colors"
                       style={{ fontSize: "11pt", width: "115mm" }}
