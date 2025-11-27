@@ -772,7 +772,7 @@ export default function BDOChequeFiller() {
                 {/* Fillable Fields */}
                 <div className="relative" style={{ padding: "9.52mm 3.27mm" }}>
                   {/* Date Fields */}
-                  <div className="absolute" style={{ top: "11.7mm", right: "12mm" }}>
+                  <div className="absolute" style={{ top: "11.7mm", right: "11.5mm" }}>
                     <div className="flex items-baseline gap-0">
                       {[
                         { ref: refs.month1, field: "month1", next: refs.month2, mr: "0.66mm" },
