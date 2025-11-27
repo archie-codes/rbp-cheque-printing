@@ -703,7 +703,7 @@ export default function BDOChequeFiller() {
                     className="h-10 font-mono text-lg"
                   />
                   {formData.pesosSentece && (
-                    <p className="text-xs text-slate-500 bg-slate-50 p-2 rounded-md border">{formData.pesosSentece}</p>
+                    <p className="text-xs text-slate-500 bg-slate-50 p-2 rounded-md border">{"***" + formData.pesosSentece + "***"}</p>
                   )}
                 </div>
 
@@ -772,7 +772,7 @@ export default function BDOChequeFiller() {
                 {/* Fillable Fields */}
                 <div className="relative" style={{ padding: "9.52mm 3.27mm" }}>
                   {/* Date Fields */}
-                  <div className="absolute" style={{ top: "12.5mm", right: "12mm" }}>
+                  <div className="absolute" style={{ top: "11.7mm", right: "12mm" }}>
                     <div className="flex items-baseline gap-0">
                       {[
                         { ref: refs.month1, field: "month1", next: refs.month2, mr: "0.66mm" },
@@ -834,7 +834,7 @@ export default function BDOChequeFiller() {
                   <div className="absolute" style={{ bottom: "-15mm", left: "18mm" }}>
                     <input
                       type="text"
-                      value={formData.pesosSentece}
+                      value={"***" + formData.pesosSentece + "***"}
                       onChange={(e) => updateField("pesosSentece", e.target.value)}
                       className="border-b border-gray-400 print:border-none text-left bg-transparent focus:outline-none focus:border-blue-500 focus:border-b-2 transition-colors"
                       style={{ fontSize: "11pt", width: "180mm" }}
