@@ -555,8 +555,6 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="max-w-6xl mx-auto px-6 pt-16 pb-8">
         <h1 className="text-4xl md:text-5xl font-semibold text-foreground text-center mb-4 tracking-tight text-balance">
-          Professional Cheque
-          <br />
           Printing Made Simple
         </h1>
         <p className="text-muted-foreground text-center text-lg max-w-xl mx-auto mb-12 text-pretty">

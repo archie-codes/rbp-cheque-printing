@@ -424,6 +424,7 @@ export default function BDOChequeFiller() {
     pesosSentece: "",
   })
 
+  
   const updateField = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }

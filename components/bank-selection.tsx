@@ -16,8 +16,8 @@ const banks = [
   },
   {
     id: "chinabank",
-    name: "China Bank",
-    description: "China Bank Cheque Printing",
+    name: "Chinabank",
+    description: "Chinabank Cheque Printing",
     href: "/chinabank",
     image: "/chinabank.jpg",
     accentColor: "hover:border-[#c41e3a]",
