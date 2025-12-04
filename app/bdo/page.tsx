@@ -8,7 +8,7 @@ import {
   Eye,
   EyeOff,
   ArrowLeft,
-  Calendar,
+  Calendar as CalendarIcon,
   User,
   DollarSign,
   FileText,
@@ -20,6 +20,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 export default function BDOChequeFiller() {
   const [showTemplate, setShowTemplate] = useState(true);
@@ -36,6 +40,7 @@ export default function BDOChequeFiller() {
     pesos: "",
     pesosSentece: "",
   });
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
 
   const updateField = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -47,6 +52,38 @@ export default function BDOChequeFiller() {
       return acc;
     }, {} as Record<string, string>);
     setFormData(emptyData);
+    setSelectedDate(undefined);
+  };
+
+  const handleDateSelect = (date?: Date) => {
+    setSelectedDate(date ?? undefined);
+    if (!date) {
+      setFormData((prev) => ({
+        ...prev,
+        month1: "",
+        month2: "",
+        day1: "",
+        day2: "",
+        year1: "",
+        year2: "",
+        year3: "",
+        year4: "",
+      }));
+      return;
+    }
+
+    const formatted = format(date, "MMddyyyy");
+    setFormData((prev) => ({
+      ...prev,
+      month1: formatted[0] ?? "",
+      month2: formatted[1] ?? "",
+      day1: formatted[2] ?? "",
+      day2: formatted[3] ?? "",
+      year1: formatted[4] ?? "",
+      year2: formatted[5] ?? "",
+      year3: formatted[6] ?? "",
+      year4: formatted[7] ?? "",
+    }));
   };
 
   function formatNumberOnBlur(value: string) {
@@ -64,41 +101,84 @@ export default function BDOChequeFiller() {
   }
 
   function numberToWordsSentence(value: string) {
-  const cleaned = value.replace(/[^\d.]/g, "")
-  if (!cleaned) return ""
-  const num = Number.parseFloat(cleaned)
-  if (isNaN(num)) return ""
+    const cleaned = value.replace(/[^\d.]/g, "");
+    if (!cleaned) return "";
+    const num = Number.parseFloat(cleaned);
+    if (isNaN(num)) return "";
 
-  const ones = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"]
-  const teens = [
-    "Ten","Eleven","Twelve","Thirteen","Fourteen",
-    "Fifteen","Sixteen","Seventeen","Eighteen","Nineteen"
-  ]
-  const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"]
+    const ones = [
+      "",
+      "One",
+      "Two",
+      "Three",
+      "Four",
+      "Five",
+      "Six",
+      "Seven",
+      "Eight",
+      "Nine",
+    ];
+    const teens = [
+      "Ten",
+      "Eleven",
+      "Twelve",
+      "Thirteen",
+      "Fourteen",
+      "Fifteen",
+      "Sixteen",
+      "Seventeen",
+      "Eighteen",
+      "Nineteen",
+    ];
+    const tens = [
+      "",
+      "",
+      "Twenty",
+      "Thirty",
+      "Forty",
+      "Fifty",
+      "Sixty",
+      "Seventy",
+      "Eighty",
+      "Ninety",
+    ];
 
-  const toWords = (n: number): string => {
-    if (n < 10) return ones[n]
-    if (n < 20) return teens[n - 10]
-    if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? " " + ones[n % 10] : "")
-    if (n < 1000) return ones[Math.floor(n / 100)] + " Hundred" + (n % 100 ? " " + toWords(n % 100) : "")
-    if (n < 1000000) return toWords(Math.floor(n / 1000)) + " Thousand" + (n % 1000 ? " " + toWords(n % 1000) : "")
-    if (n < 1000000000) return toWords(Math.floor(n / 1000000)) + " Million" + (n % 1000000 ? " " + toWords(n % 1000000) : "")
-    return ""
+    const toWords = (n: number): string => {
+      if (n < 10) return ones[n];
+      if (n < 20) return teens[n - 10];
+      if (n < 100) {
+        const tensPart = tens[Math.floor(n / 10)];
+        const onesPart = n % 10 ? " " + ones[n % 10] : "";
+        return tensPart + onesPart;
+      }
+      if (n < 1000) {
+        const hundredsPart = ones[Math.floor(n / 100)] + " Hundred";
+        const remainder = n % 100 ? " " + toWords(n % 100) : "";
+        return hundredsPart + remainder;
+      }
+      if (n < 1_000_000) {
+        const thousandsPart = toWords(Math.floor(n / 1000)) + " Thousand";
+        const remainder = n % 1000 ? " " + toWords(n % 1000) : "";
+        return thousandsPart + remainder;
+      }
+      if (n < 1_000_000_000) {
+        const millionsPart = toWords(Math.floor(n / 1_000_000)) + " Million";
+        const remainder = n % 1_000_000 ? " " + toWords(n % 1_000_000) : "";
+        return millionsPart + remainder;
+      }
+      return "";
+    };
+
+    const [intPart, decPart = ""] = cleaned.split(".");
+    const pesos = Number.parseInt(intPart, 10);
+    const centavos = decPart.substring(0, 2).padEnd(2, "0");
+    const words = toWords(pesos);
+
+    if (Number.parseInt(centavos) === 0) {
+      return `${words} Pesos Only`;
+    }
+    return `${words} Pesos and ${centavos}/100 Centavos`;
   }
-
-  const [intPart, decPart = ""] = cleaned.split(".")
-  const pesos = Number.parseInt(intPart, 10)
-  const centavos = decPart.substring(0, 2).padEnd(2, "0")
-  const words = toWords(pesos)
-
-  if (Number.parseInt(centavos) === 0) {
-    return `${words} Pesos Only`
-  }
-
-  // 🔥 REMOVE "Only" when there are centavos
-  return `${words} Pesos and ${centavos}/100 Centavos`
-}
-
 
   const refs = {
     month1: useRef<HTMLInputElement>(null),
@@ -120,43 +200,6 @@ export default function BDOChequeFiller() {
     updateField(field, value);
     if (value && next?.current) {
       // Use setTimeout to ensure the value is set before focusing
-      setTimeout(() => {
-        next.current?.focus();
-      }, 0);
-    }
-  };
-
-  const handleDateKeyDown = (
-    e: React.KeyboardEvent<HTMLInputElement>,
-    field: keyof typeof formData,
-    next?: React.RefObject<HTMLInputElement | null>
-  ) => {
-    // Handle Enter key - move to next field or blur if last field
-    if (e.key === "Enter") {
-      e.preventDefault();
-      if (next?.current) {
-        next.current.focus();
-      } else {
-        e.currentTarget.blur();
-      }
-      return;
-    }
-
-    // Allow navigation keys
-    if (
-      e.key === "Backspace" ||
-      e.key === "Delete" ||
-      e.key === "ArrowLeft" ||
-      e.key === "ArrowRight" ||
-      e.key === "Tab"
-    ) {
-      return;
-    }
-
-    // If a digit is pressed and the field already has a value, move to next
-    if (/[0-9]/.test(e.key) && formData[field] && next?.current) {
-      e.preventDefault();
-      updateField(field, e.key);
       setTimeout(() => {
         next.current?.focus();
       }, 0);
@@ -269,113 +312,35 @@ export default function BDOChequeFiller() {
                 {/* Date Section */}
                 <div className="space-y-3">
                   <Label className="text-sm font-medium flex items-center gap-2 text-slate-700">
-                    <Calendar className="h-4 w-4 text-slate-400" />
-                    Date (MM/DD/YYYY)
+                    <CalendarIcon className="h-4 w-4 text-slate-400" />
+                    Date
                   </Label>
-                  <div className="flex items-center gap-1">
-                    <div className="flex gap-0.5">
-                      <Input
-                        ref={refs.month1}
-                        value={formData.month1}
-                        inputMode="numeric"
-                        maxLength={1}
-                        onChange={(e) => handleDigit(e, "month1", refs.month2)}
-                        onKeyDown={(e) =>
-                          handleDateKeyDown(e, "month1", refs.month2)
-                        }
-                        className="w-9 h-10 text-center font-mono text-lg p-0"
-                        placeholder="M"
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !selectedDate && "text-slate-400"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {selectedDate ? (
+                          format(selectedDate, "MM/dd/yyyy")
+                        ) : (
+                          <span>Select a date</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={handleDateSelect}
+                        initialFocus
                       />
-                      <Input
-                        ref={refs.month2}
-                        value={formData.month2}
-                        inputMode="numeric"
-                        maxLength={1}
-                        onChange={(e) => handleDigit(e, "month2", refs.day1)}
-                        onKeyDown={(e) =>
-                          handleDateKeyDown(e, "month2", refs.day1)
-                        }
-                        className="w-9 h-10 text-center font-mono text-lg p-0"
-                        placeholder="M"
-                      />
-                    </div>
-                    <span className="text-slate-300 font-bold">/</span>
-                    <div className="flex gap-0.5">
-                      <Input
-                        ref={refs.day1}
-                        value={formData.day1}
-                        inputMode="numeric"
-                        maxLength={1}
-                        onChange={(e) => handleDigit(e, "day1", refs.day2)}
-                        onKeyDown={(e) =>
-                          handleDateKeyDown(e, "day1", refs.day2)
-                        }
-                        className="w-9 h-10 text-center font-mono text-lg p-0"
-                        placeholder="D"
-                      />
-                      <Input
-                        ref={refs.day2}
-                        value={formData.day2}
-                        inputMode="numeric"
-                        maxLength={1}
-                        onChange={(e) => handleDigit(e, "day2", refs.year1)}
-                        onKeyDown={(e) =>
-                          handleDateKeyDown(e, "day2", refs.year1)
-                        }
-                        className="w-9 h-10 text-center font-mono text-lg p-0"
-                        placeholder="D"
-                      />
-                    </div>
-                    <span className="text-slate-300 font-bold">/</span>
-                    <div className="flex gap-0.5">
-                      <Input
-                        ref={refs.year1}
-                        value={formData.year1}
-                        inputMode="numeric"
-                        maxLength={1}
-                        onChange={(e) => handleDigit(e, "year1", refs.year2)}
-                        onKeyDown={(e) =>
-                          handleDateKeyDown(e, "year1", refs.year2)
-                        }
-                        className="w-9 h-10 text-center font-mono text-lg p-0"
-                        placeholder="Y"
-                      />
-                      <Input
-                        ref={refs.year2}
-                        value={formData.year2}
-                        inputMode="numeric"
-                        maxLength={1}
-                        onChange={(e) => handleDigit(e, "year2", refs.year3)}
-                        onKeyDown={(e) =>
-                          handleDateKeyDown(e, "year2", refs.year3)
-                        }
-                        className="w-9 h-10 text-center font-mono text-lg p-0"
-                        placeholder="Y"
-                      />
-                      <Input
-                        ref={refs.year3}
-                        value={formData.year3}
-                        inputMode="numeric"
-                        maxLength={1}
-                        onChange={(e) => handleDigit(e, "year3", refs.year4)}
-                        onKeyDown={(e) =>
-                          handleDateKeyDown(e, "year3", refs.year4)
-                        }
-                        className="w-9 h-10 text-center font-mono text-lg p-0"
-                        placeholder="Y"
-                      />
-                      <Input
-                        ref={refs.year4}
-                        value={formData.year4}
-                        inputMode="numeric"
-                        maxLength={1}
-                        onChange={(e) => handleDigit(e, "year4")}
-                        onKeyDown={(e) => handleDateKeyDown(e, "year4")}
-                        className="w-9 h-10 text-center font-mono text-lg p-0"
-                        placeholder="Y"
-                      />
-                    </div>
-                  </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
 
                 <Separator />
@@ -418,7 +383,7 @@ export default function BDOChequeFiller() {
                   />
                   {formData.pesosSentece && (
                     <p className="text-xs text-slate-500 bg-slate-50 p-2 rounded-md border">
-                      {"***" + formData.pesosSentece + "***"}
+                      {formData.pesosSentece}
                     </p>
                   )}
                 </div>
