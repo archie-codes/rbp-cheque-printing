@@ -64,84 +64,41 @@ export default function BDOChequeFiller() {
   }
 
   function numberToWordsSentence(value: string) {
-    const cleaned = value.replace(/[^\d.]/g, "");
-    if (!cleaned) return "";
-    const num = Number.parseFloat(cleaned);
-    if (isNaN(num)) return "";
+  const cleaned = value.replace(/[^\d.]/g, "")
+  if (!cleaned) return ""
+  const num = Number.parseFloat(cleaned)
+  if (isNaN(num)) return ""
 
-    const ones = [
-      "",
-      "One",
-      "Two",
-      "Three",
-      "Four",
-      "Five",
-      "Six",
-      "Seven",
-      "Eight",
-      "Nine",
-    ];
-    const teens = [
-      "Ten",
-      "Eleven",
-      "Twelve",
-      "Thirteen",
-      "Fourteen",
-      "Fifteen",
-      "Sixteen",
-      "Seventeen",
-      "Eighteen",
-      "Nineteen",
-    ];
-    const tens = [
-      "",
-      "",
-      "Twenty",
-      "Thirty",
-      "Forty",
-      "Fifty",
-      "Sixty",
-      "Seventy",
-      "Eighty",
-      "Ninety",
-    ];
+  const ones = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"]
+  const teens = [
+    "Ten","Eleven","Twelve","Thirteen","Fourteen",
+    "Fifteen","Sixteen","Seventeen","Eighteen","Nineteen"
+  ]
+  const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"]
 
-    const toWords = (n: number): string => {
-      if (n < 10) return ones[n];
-      if (n < 20) return teens[n - 10];
-      if (n < 100)
-        return tens[Math.floor(n / 10)] + (n % 10 ? " " + ones[n % 10] : "");
-      if (n < 1000)
-        return (
-          ones[Math.floor(n / 100)] +
-          " Hundred" +
-          (n % 100 ? " " + toWords(n % 100) : "")
-        );
-      if (n < 1000000)
-        return (
-          toWords(Math.floor(n / 1000)) +
-          " Thousand" +
-          (n % 1000 ? " " + toWords(n % 1000) : "")
-        );
-      if (n < 1000000000)
-        return (
-          toWords(Math.floor(n / 1000000)) +
-          " Million" +
-          (n % 1000000 ? " " + toWords(n % 1000000) : "")
-        );
-      return "";
-    };
-
-    const [intPart, decPart = ""] = cleaned.split(".");
-    const pesos = Number.parseInt(intPart, 10);
-    const centavos = decPart.substring(0, 2).padEnd(2, "0");
-    const words = toWords(pesos);
-
-    if (Number.parseInt(centavos) === 0) {
-      return `${words} Pesos Only`;
-    }
-    return `${words} Pesos and ${centavos}/100 Centavos Only`;
+  const toWords = (n: number): string => {
+    if (n < 10) return ones[n]
+    if (n < 20) return teens[n - 10]
+    if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? " " + ones[n % 10] : "")
+    if (n < 1000) return ones[Math.floor(n / 100)] + " Hundred" + (n % 100 ? " " + toWords(n % 100) : "")
+    if (n < 1000000) return toWords(Math.floor(n / 1000)) + " Thousand" + (n % 1000 ? " " + toWords(n % 1000) : "")
+    if (n < 1000000000) return toWords(Math.floor(n / 1000000)) + " Million" + (n % 1000000 ? " " + toWords(n % 1000000) : "")
+    return ""
   }
+
+  const [intPart, decPart = ""] = cleaned.split(".")
+  const pesos = Number.parseInt(intPart, 10)
+  const centavos = decPart.substring(0, 2).padEnd(2, "0")
+  const words = toWords(pesos)
+
+  if (Number.parseInt(centavos) === 0) {
+    return `${words} Pesos Only`
+  }
+
+  // 🔥 REMOVE "Only" when there are centavos
+  return `${words} Pesos and ${centavos}/100 Centavos`
+}
+
 
   const refs = {
     month1: useRef<HTMLInputElement>(null),
