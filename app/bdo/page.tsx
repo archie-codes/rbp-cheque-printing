@@ -109,7 +109,9 @@ export default function BDOChequeFiller() {
       alert("Failed to add payee. Please try again.");
     } finally {
       setIsAddingPayee(false);
-      toast.success("Payee added successfully!");
+      toast.success("Payee added successfully!", {
+        className: "!bg-indigo-500 !text-white",
+      });
     }
   };
 
