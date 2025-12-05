@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import {
   Printer,
   RotateCcw,
@@ -20,10 +20,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { Plus } from "lucide-react";
 
 export default function BDOChequeFiller() {
   const [showTemplate, setShowTemplate] = useState(true);
@@ -41,6 +56,62 @@ export default function BDOChequeFiller() {
     pesosSentece: "",
   });
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [payees, setPayees] = useState<Array<{ id: number; name: string }>>([]);
+  const [newPayee, setNewPayee] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isLoadingPayees, setIsLoadingPayees] = useState(false);
+  const [isAddingPayee, setIsAddingPayee] = useState(false);
+
+  useEffect(() => {
+    async function loadPayees() {
+      setIsLoadingPayees(true);
+      try {
+        const res = await fetch("/api/payees");
+        const data = await res.json();
+        setPayees(data);
+      } catch (error) {
+        console.error("Failed to load payees:", error);
+      } finally {
+        setIsLoadingPayees(false);
+      }
+    }
+    loadPayees();
+  }, []);
+
+  const handleAddPayee = async () => {
+    if (!newPayee.trim()) return;
+
+    setIsAddingPayee(true);
+    try {
+      const res = await fetch("/api/payees", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name: newPayee.trim() }),
+      });
+
+      if (res.ok) {
+        const newPayeeData = await res.json();
+        setPayees((prev) =>
+          [...prev, newPayeeData].sort((a, b) => a.name.localeCompare(b.name))
+        );
+        setNewPayee("");
+        setIsDialogOpen(false);
+        // Optionally set the new payee as the selected payee
+        updateField("name", newPayeeData.name);
+      } else {
+        const error = await res.json();
+        alert(error.error || "Failed to add payee");
+      }
+    } catch (error) {
+      console.error("Failed to add payee:", error);
+      alert("Failed to add payee. Please try again.");
+    } finally {
+      setIsAddingPayee(false);
+      toast.success("Payee added successfully!");
+    }
+  };
 
   const updateField = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -351,13 +422,81 @@ export default function BDOChequeFiller() {
                     <User className="h-4 w-4 text-slate-400" />
                     Pay to the Order of
                   </Label>
-                  <Input
-                    value={formData.name}
-                    onChange={(e) => updateField("name", e.target.value)}
-                    onKeyDown={handlePayeeEnter}
-                    placeholder="Enter payee name"
-                    className="h-10"
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      value={formData.name}
+                      onChange={(e) => updateField("name", e.target.value)}
+                      onKeyDown={handlePayeeEnter}
+                      placeholder="Enter payee name"
+                      className="h-10 flex-1"
+                      list="payees-list"
+                    />
+                    <datalist id="payees-list">
+                      {payees.map((payee) => (
+                        <option key={payee.id} value={payee.name} />
+                      ))}
+                    </datalist>
+                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="h-10 w-10 shrink-0"
+                          title="Add new payee"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Add New Payee</DialogTitle>
+                          <DialogDescription>
+                            Add a new payee to your database for quick
+                            selection.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="new-payee-name">Payee Name</Label>
+                            <Input
+                              id="new-payee-name"
+                              value={newPayee}
+                              onChange={(e) => setNewPayee(e.target.value)}
+                              placeholder="Enter payee name"
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  e.preventDefault();
+                                  handleAddPayee();
+                                }
+                              }}
+                              autoFocus
+                            />
+                          </div>
+                        </div>
+                        <DialogFooter>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                              setIsDialogOpen(false);
+                              setNewPayee("");
+                            }}
+                            disabled={isAddingPayee}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            type="button"
+                            onClick={handleAddPayee}
+                            disabled={!newPayee.trim() || isAddingPayee}
+                          >
+                            {isAddingPayee ? "Adding..." : "Add Payee"}
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                 </div>
 
                 <Separator />
