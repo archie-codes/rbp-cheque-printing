@@ -8,7 +8,7 @@ const banks = [
   {
     id: "bdo",
     name: "BDO Unibank",
-    description: "BDO Cheque Printing",
+    description: "BDO Cheque",
     href: "/bdo",
     image: "/bdo.jpg",
     accentColor: "hover:border-[#0056a8]",
@@ -17,17 +17,26 @@ const banks = [
   {
     id: "chinabank",
     name: "Chinabank",
-    description: "Chinabank Cheque Printing",
+    description: "Chinabank Cheque",
     href: "/chinabank",
     image: "/chinabank.jpg",
     accentColor: "hover:border-[#c41e3a]",
     tagColor: "bg-[#fdf2f4] text-[#c41e3a]",
   },
+  {
+    id: "rcbc",
+    name: "RCBC",
+    description: "RCBC Cheque",
+    href: "/rcbc",
+    image: "/rcbc.jpg",
+    accentColor: "hover:border-[#0072ce]",
+    tagColor: "bg-[#e6f2ff] text-[#0072ce]",
+  }
 ]
 
 export function BankSelection() {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-8xl mx-auto bg-transparent">
       {banks.map((bank) => (
         <Link key={bank.id} href={bank.href} className="group">
           <div
